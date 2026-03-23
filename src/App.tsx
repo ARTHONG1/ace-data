@@ -256,9 +256,45 @@ export default function App() {
             <div className="w-8 h-8 bg-[#3182f6] rounded-lg flex items-center justify-center shadow-sm">
               <Database className="text-white w-5 h-5" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">DataPortal</h1>
+            <h1 className="text-xl font-bold tracking-tight">ACE Data Finder</h1>
           </div>
           <div className="flex items-center gap-4">
+            <a 
+              href="https://product.kyobobook.co.kr/detail/S000219238925"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <ExternalLink size={16} />
+              제미나이
+            </a>
+            <a 
+              href="https://www.yes24.com/product/goods/152079426"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <ExternalLink size={16} />
+              바이브코딩
+            </a>
+            <a 
+              href="https://studio--studio-2646915464-a86ca.us-central1.hosted.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <ExternalLink size={16} />
+              클래스똑딱
+            </a>
+            <a 
+              href="https://studio--studio-6411906927-c7113.us-central1.hosted.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <Info size={16} />
+              개발자 정보
+            </a>
             <button 
               onClick={handleDownloadExcel}
               disabled={downloading}
@@ -693,7 +729,7 @@ export default function App() {
 
         <footer className="py-12 text-center space-y-2">
           <p className="text-xs font-bold text-[#8b95a1] uppercase tracking-widest">DataPortal Explorer</p>
-          <p className="text-[10px] text-[#adb5bd]">Powered by ODCloud Open API • Built with React & Tailwind</p>
+          <p className="text-[10px] text-[#adb5bd]">개발자는 ACE 연구회 회장 인천봉수초 교사 홍찬우</p>
         </footer>
       </main>
 
