@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-toss-blue: #3182f6;
+  --color-toss-bg: #f2f4f6;
+  --color-toss-gray-dark: #191f28;
+  --color-toss-gray-medium: #4e5968;
+  --color-toss-gray-light: #8b95a1;
+}
+
+@layer base {
+  body {
+    @apply bg-toss-bg text-toss-gray-dark antialiased;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Public Data Explorer",
+  "description": "An application to explore and visualize public data from the ODCloud API.",
+  "requestFramePermissions": []
+}
