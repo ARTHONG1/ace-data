@@ -1,0 +1,29 @@
+[
+  {
+    "id": "default-popup-1",
+    "title": "바로 배워서 바로 써먹는 바이브코딩",
+    "description": "직접 집필에 참여한 《바로 배워서 바로 써먹는 바이브코딩》을 소개드립니다. 바이브코딩으로 도구를 만들 때 어떻게 시작하고, 어떤 흐름으로 완성해 나가는지를 따라갈 수 있도록 핵심 개념과 제작 과정, 실제 교실·업무 사례를 담았습니다. 이 홈페이지에 있는 앱들도 같은 방식으로 제작했으며, 선생님들께서 필요한 도구를 스스로 만들어 적용해 보실 때 참고가 되길 바랍니다.",
+    "buttonText": "바로가기",
+    "linkUrl": "https://www.yes24.com/Product/Goods/133809803",
+    "imageFilename": "책1.png",
+    "isActive": false
+  },
+  {
+    "id": "default-popup-2",
+    "title": "제8회 교육 공공데이터 AI 활용대회",
+    "description": "교육부와 한국교육학술정보원(KERIS)이 주최하는 제8회 교육 공공데이터 분석·활용대회가 열립니다. 데이터 기반의 교육 정책 발굴과 AI 활용 아이디어를 제안해 보세요. 선생님들의 많은 관심과 참여 바랍니다.",
+    "buttonText": "자세히 보기",
+    "linkUrl": "https://www.keris.or.kr/main/ad/prm/selectPrmArticle.do?mi=1030&prmOpnNo=3929",
+    "imageFilename": "공공.png",
+    "isActive": false
+  },
+  {
+    "id": "default-popup-3",
+    "title": "교실로 ON 제미나이",
+    "description": "구글의 생성형 AI 제미나이(Gemini)를 교실 수업과 업무에 활용하는 방법을 다룬 책입니다. 프롬프트 작성법부터 실제 수업 적용 사례까지, 선생님들을 위한 실용적인 가이드를 제공합니다.",
+    "buttonText": "바로가기",
+    "linkUrl": "https://www.yes24.com/Product/Goods/125575510",
+    "imageFilename": "책2.png",
+    "isActive": false
+  }
+]

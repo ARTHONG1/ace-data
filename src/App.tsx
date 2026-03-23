@@ -15,10 +15,27 @@ import {
   Send,
   Filter,
   BrainCircuit,
-  X
+  X,
+  Plus,
+  Edit,
+  Trash2,
+  GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { recommendDatasets, recommendAppsFromDatasets, searchDatasets, summarizeData } from './services/aiService';
+import popupsData from './data/popups.json';
+
+export interface Popup {
+  id: string;
+  title: string;
+  description: string;
+  buttonText?: string;
+  linkUrl?: string;
+  imageFilename?: string;
+  youtubeUrl?: string;
+  isActive: boolean;
+}
 
 export default function App() {
   const [data, setData] = useState<PublicDataResponse | null>(null);
@@ -35,6 +52,61 @@ export default function App() {
   const [isAppRecLoading, setIsAppRecLoading] = useState(false);
   const [userAdditionalIdea, setUserAdditionalIdea] = useState('');
   
+  // Popup Management States
+  const [popups, setPopups] = useState<Popup[]>(popupsData as Popup[]);
+  const [isPopupManagerOpen, setIsPopupManagerOpen] = useState(false);
+  const [isPopupEditorOpen, setIsPopupEditorOpen] = useState(false);
+  const [editingPopup, setEditingPopup] = useState<Popup | null>(null);
+  const [closedPopups, setClosedPopups] = useState<string[]>([]); // Track closed popups in current session
+  
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const items = Array.from(popups);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setPopups(items);
+  };
+
+  const [hiddenPopups, setHiddenPopups] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('app_hidden_popups');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const now = Date.now();
+        const valid: Record<string, number> = {};
+        for (const [id, expiry] of Object.entries(parsed)) {
+          if (now < (expiry as number)) {
+            valid[id] = expiry as number;
+          }
+        }
+        return valid;
+      } catch (e) {}
+    }
+    return {};
+  });
+  
+  // Save popups to local file during development
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      fetch('/api/popups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(popups),
+      }).catch(err => console.error('Failed to save popups to local DB:', err));
+    }
+  }, [popups]);
+
+  // Save hidden popups
+  useEffect(() => {
+    localStorage.setItem('app_hidden_popups', JSON.stringify(hiddenPopups));
+  }, [hiddenPopups]);
+
   // New States for Filtering and Intelligent Search
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProvider, setSelectedProvider] = useState('All');
@@ -727,10 +799,20 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <footer className="py-12 text-center space-y-2">
+        <footer className="py-12 text-center space-y-4 relative">
           <p className="text-[11px] text-[#8b95a1] font-medium tracking-wide">
             Created by 홍찬우 <span className="mx-1.5 text-[#d1d6db]">|</span> 인천봉수초 교사 · ACE 연구회 회장
           </p>
+          {import.meta.env.DEV && (
+            <div className="flex justify-center">
+              <button 
+                onClick={() => setIsPopupManagerOpen(true)}
+                className="text-[11px] text-[#8b95a1] hover:text-[#4e5968] px-3 py-1.5 rounded-lg border border-[#e5e8eb] hover:bg-[#f2f4f6] transition-colors"
+              >
+                팝업 관리
+              </button>
+            </div>
+          )}
         </footer>
       </main>
 
@@ -819,6 +901,354 @@ export default function App() {
             </motion.div>
           </>
         )}
+      </AnimatePresence>
+
+      {/* Popup Manager Modal */}
+      <AnimatePresence>
+        {isPopupManagerOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsPopupManagerOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-2xl bg-white rounded-[24px] shadow-2xl z-[70] overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-black/[0.04]">
+                <h2 className="text-xl font-bold text-[#191f28]">팝업 관리</h2>
+                <button 
+                  onClick={() => setIsPopupManagerOpen(false)}
+                  className="p-2 text-[#8b95a1] hover:bg-[#f2f4f6] rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 flex-1 overflow-y-auto bg-[#f9fafb]">
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => {
+                      setEditingPopup(null);
+                      setIsPopupEditorOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#6366f1] text-white rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors"
+                  >
+                    <Plus size={16} />
+                    새 팝업 추가
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {popups.length === 0 ? (
+                    <div className="text-center py-12 text-[#8b95a1] text-sm">
+                      등록된 팝업이 없습니다.
+                    </div>
+                  ) : (
+                    <DragDropContext onDragEnd={onDragEnd}>
+                      <Droppable droppableId="popups-list">
+                        {(provided) => (
+                          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+                            {popups.map((popup, index) => (
+                              <Draggable key={popup.id} draggableId={popup.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div 
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`bg-white p-5 rounded-2xl border flex items-center justify-between gap-4 shadow-sm transition-shadow ${snapshot.isDragging ? 'border-[#6366f1] shadow-md' : 'border-black/[0.04]'}`}
+                                  >
+                                    <div 
+                                      {...provided.dragHandleProps}
+                                      className="text-[#8b95a1] hover:text-[#4e5968] cursor-grab active:cursor-grabbing p-1 -ml-2"
+                                    >
+                                      <GripVertical size={20} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="text-[15px] font-bold text-[#191f28] truncate">{popup.title}</h3>
+                                      <p className="text-[13px] text-[#8b95a1] mt-1 truncate">{popup.id}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                      <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${popup.isActive ? 'bg-[#6366f1] text-white' : 'bg-[#f2f4f6] text-[#8b95a1]'}`}>
+                                        {popup.isActive ? '활성' : '비활성'}
+                                      </span>
+                                      <button 
+                                        onClick={() => {
+                                          setEditingPopup(popup);
+                                          setIsPopupEditorOpen(true);
+                                        }}
+                                        className="p-2 text-[#4e5968] hover:bg-[#f2f4f6] rounded-lg transition-colors"
+                                      >
+                                        <Edit size={18} />
+                                      </button>
+                                      <button 
+                                        onClick={() => {
+                                          if (confirm('정말로 이 팝업을 삭제하시겠습니까?')) {
+                                            setPopups(prev => prev.filter(p => p.id !== popup.id));
+                                          }
+                                        }}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                      >
+                                        <Trash2 size={18} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Popup Editor Modal */}
+      <AnimatePresence>
+        {isPopupEditorOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80]"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-xl bg-[#f9fafb] rounded-[24px] shadow-2xl z-[90] overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="flex items-center justify-between p-6 pb-4">
+                <h2 className="text-xl font-bold text-[#191f28]">
+                  {editingPopup ? '팝업 수정' : '새 팝업 추가'}
+                </h2>
+                <button 
+                  onClick={() => setIsPopupEditorOpen(false)}
+                  className="p-2 text-[#8b95a1] hover:bg-[#e5e8eb] rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const newPopup: Popup = {
+                    id: editingPopup ? editingPopup.id : `popup-${Date.now()}`,
+                    title: formData.get('title') as string,
+                    description: formData.get('description') as string,
+                    buttonText: formData.get('buttonText') as string,
+                    linkUrl: formData.get('linkUrl') as string,
+                    imageFilename: formData.get('imageFilename') as string,
+                    youtubeUrl: formData.get('youtubeUrl') as string,
+                    isActive: formData.get('isActive') === 'on',
+                  };
+
+                  if (editingPopup) {
+                    setPopups(prev => prev.map(p => p.id === editingPopup.id ? newPopup : p));
+                  } else {
+                    setPopups(prev => [newPopup, ...prev]);
+                  }
+                  setIsPopupEditorOpen(false);
+                }}
+                className="p-6 pt-2 flex-1 overflow-y-auto space-y-5"
+              >
+                <div>
+                  <label className="block text-[13px] font-bold text-[#333d4b] mb-2">제목</label>
+                  <input 
+                    name="title"
+                    defaultValue={editingPopup?.title}
+                    required
+                    className="w-full px-4 py-3 bg-white border border-[#6366f1] rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-[13px] font-bold text-[#333d4b] mb-2">설명 (줄바꿈 가능)</label>
+                  <textarea 
+                    name="description"
+                    defaultValue={editingPopup?.description}
+                    required
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white border border-black/[0.04] rounded-xl text-[15px] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] font-bold text-[#333d4b] mb-2">버튼 텍스트 (선택 사항)</label>
+                    <input 
+                      name="buttonText"
+                      defaultValue={editingPopup?.buttonText}
+                      className="w-full px-4 py-3 bg-white border border-black/[0.04] rounded-xl text-[15px] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-bold text-[#333d4b] mb-2">연결 링크 (선택 사항)</label>
+                    <input 
+                      name="linkUrl"
+                      defaultValue={editingPopup?.linkUrl}
+                      className="w-full px-4 py-3 bg-white border border-black/[0.04] rounded-xl text-[15px] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] font-bold text-[#333d4b] mb-2">이미지 파일명 (선택 사항)</label>
+                    <input 
+                      name="imageFilename"
+                      defaultValue={editingPopup?.imageFilename}
+                      placeholder="banner.png"
+                      className="w-full px-4 py-3 bg-white border border-black/[0.04] rounded-xl text-[15px] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20"
+                    />
+                    <p className="text-[11px] text-[#8b95a1] mt-2">이미지는 public 폴더에 위치해야 합니다.</p>
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-bold text-[#333d4b] mb-2">유튜브 URL (선택 사항)</label>
+                    <input 
+                      name="youtubeUrl"
+                      defaultValue={editingPopup?.youtubeUrl}
+                      placeholder="https://www.youtube.com/watch?v="
+                      className="w-full px-4 py-3 bg-white border border-black/[0.04] rounded-xl text-[15px] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="isActive" defaultChecked={editingPopup ? editingPopup.isActive : true} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6366f1]"></div>
+                    <span className="ml-3 text-[14px] font-bold text-[#333d4b]">팝업 활성화</span>
+                  </label>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <button 
+                    type="submit"
+                    className="px-6 py-3 bg-[#6366f1] text-white rounded-xl text-[15px] font-bold hover:bg-indigo-600 transition-colors"
+                  >
+                    저장
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Actual Popups Display */}
+      {popups.filter(p => p.isActive && !closedPopups.includes(p.id) && (!hiddenPopups[p.id] || Date.now() > hiddenPopups[p.id])).length > 0 && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[45]" />
+      )}
+      <AnimatePresence>
+        {popups.filter(p => p.isActive && !closedPopups.includes(p.id) && (!hiddenPopups[p.id] || Date.now() > hiddenPopups[p.id])).map((popup, index) => (
+          <motion.div
+            key={popup.id}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ 
+              opacity: index < 3 ? 1 - (index * 0.15) : 0, 
+              y: index * 15, 
+              scale: index < 3 ? 1 - (index * 0.04) : 0.8 
+            }}
+            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed z-[50] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[480px] bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-black/[0.04] overflow-hidden flex flex-col"
+            style={{ 
+              zIndex: 100 - index,
+              pointerEvents: index === 0 ? 'auto' : 'none',
+              transformOrigin: 'top center'
+            }}
+          >
+            {popup.imageFilename && (
+              <div className="w-full aspect-video bg-[#f2f4f6] relative">
+                <img 
+                  src={`/${popup.imageFilename}`} 
+                  alt={popup.title} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+            
+            {popup.youtubeUrl && !popup.imageFilename && (
+              <div className="w-full aspect-video bg-black">
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  src={popup.youtubeUrl.replace('watch?v=', 'embed/').split('&')[0]} 
+                  title="YouTube video player" 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                ></iframe>
+              </div>
+            )}
+
+            <div className="p-6">
+              <div className="flex justify-between items-start gap-4 mb-2">
+                <h3 className="text-[17px] font-bold text-[#191f28] leading-snug">{popup.title}</h3>
+                <button 
+                  onClick={() => setClosedPopups(prev => [...prev, popup.id])}
+                  className="p-1.5 -mr-1.5 -mt-1.5 text-[#8b95a1] hover:bg-[#f2f4f6] rounded-full transition-colors shrink-0"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <p className="text-[14px] text-[#4e5968] leading-relaxed whitespace-pre-wrap mb-5">
+                {popup.description}
+              </p>
+
+              {popup.buttonText && popup.linkUrl && (
+                <a 
+                  href={popup.linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setClosedPopups(prev => [...prev, popup.id])}
+                  className="block w-full py-3.5 bg-[#3182f6] text-white text-center rounded-xl text-[15px] font-bold hover:bg-blue-600 transition-colors"
+                >
+                  {popup.buttonText}
+                </a>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center px-6 py-4 bg-[#f9fafb] border-t border-black/[0.04]">
+              <button 
+                onClick={() => {
+                  const tomorrow = new Date();
+                  tomorrow.setHours(24, 0, 0, 0);
+                  setHiddenPopups(prev => ({ ...prev, [popup.id]: tomorrow.getTime() }));
+                  setClosedPopups(prev => [...prev, popup.id]);
+                }}
+                className="text-[13px] text-[#8b95a1] hover:text-[#4e5968] transition-colors"
+              >
+                오늘 하루 보지 않기
+              </button>
+              <button 
+                onClick={() => setClosedPopups(prev => [...prev, popup.id])}
+                className="text-[13px] font-bold text-[#4e5968] hover:text-[#191f28] transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </motion.div>
+        ))}
       </AnimatePresence>
     </div>
   );
