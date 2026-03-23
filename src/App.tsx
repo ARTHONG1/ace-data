@@ -728,8 +728,9 @@ export default function App() {
         </AnimatePresence>
 
         <footer className="py-12 text-center space-y-2">
-          <p className="text-xs font-bold text-[#8b95a1] uppercase tracking-widest">DataPortal Explorer</p>
-          <p className="text-[10px] text-[#adb5bd]">개발자는 ACE 연구회 회장 인천봉수초 교사 홍찬우</p>
+          <p className="text-[11px] text-[#8b95a1] font-medium tracking-wide">
+            Created by 홍찬우 <span className="mx-1.5 text-[#d1d6db]">|</span> 인천봉수초 교사 · ACE 연구회 회장
+          </p>
         </footer>
       </main>
 
@@ -806,11 +807,11 @@ export default function App() {
                     : '이 데이터 선택하기'}
                 </button>
                 <a 
-                  href={`https://www.data.go.kr/search/index.do?index=data&query=${encodeURIComponent(selectedDetailItem['데이터셋명'] || selectedDetailItem['목록명'] || '')}`}
+                  href={selectedDetailItem['목록 URL'] || `https://www.data.go.kr/search/index.do?index=data&query=${encodeURIComponent(selectedDetailItem['데이터셋명'] || selectedDetailItem['목록명'] || '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-14 flex items-center justify-center bg-[#f2f4f6] text-[#4e5968] rounded-xl hover:bg-[#e5e8eb] transition-colors"
-                  title="공공데이터포털에서 검색"
+                  title={selectedDetailItem['목록 URL'] ? "데이터셋 목록으로 이동" : "공공데이터포털에서 검색"}
                 >
                   <Search size={20} />
                 </a>
