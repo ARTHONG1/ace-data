@@ -112,7 +112,7 @@ export default function App() {
   const [selectedProvider, setSelectedProvider] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiSearchMode, setIsAiSearchMode] = useState(false);
-  const [aiSearchResults, setAiSearchResults] = useState<{ name: string; relevance: number }[] | null>(null);
+  const [aiSearchResults, setAiSearchResults] = useState<{ name: string; relevance: number; reason?: string }[] | null>(null);
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [allCategories, setAllCategories] = useState<string[]>(['All']);
   const [allProviders, setAllProviders] = useState<string[]>(['All']);
@@ -120,8 +120,14 @@ export default function App() {
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [dataSummary, setDataSummary] = useState<string | null>(null);
   const [selectedDetailItem, setSelectedDetailItem] = useState<any | null>(null);
+  const [perPage, setPerPage] = useState(10);
 
-  const perPage = 10;
+  const perPageOptions = [
+    { label: '10개씩', value: 10 },
+    { label: '50개씩', value: 50 },
+    { label: '100개씩', value: 100 },
+    { label: '전체보기', value: 999999 }
+  ];
 
   // Fetch categories and master data once
   useEffect(() => {
@@ -323,71 +329,72 @@ export default function App() {
     <div className="min-h-screen bg-[#f2f4f6] text-[#191f28] font-sans selection:bg-blue-100">
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/5">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={clearFilters}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={clearFilters}>
             <div className="w-8 h-8 bg-[#3182f6] rounded-lg flex items-center justify-center shadow-sm">
               <Database className="text-white w-5 h-5" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">ACE Data Finder</h1>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight">ACE Data Finder</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
             <a 
               href="https://product.kyobobook.co.kr/detail/S000219238925"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              className="text-[13px] sm:text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={16} className="hidden sm:block" />
               제미나이
             </a>
             <a 
               href="https://www.yes24.com/product/goods/152079426"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              className="text-[13px] sm:text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={16} className="hidden sm:block" />
               바이브코딩
             </a>
             <a 
               href="https://studio--studio-2646915464-a86ca.us-central1.hosted.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              className="text-[13px] sm:text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={16} className="hidden sm:block" />
               클래스똑딱
             </a>
             <a 
               href="https://studio--studio-6411906927-c7113.us-central1.hosted.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              className="text-[13px] sm:text-sm font-semibold text-[#4e5968] hover:bg-black/5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
             >
-              <Info size={16} />
+              <Info size={16} className="hidden sm:block" />
               개발자 정보
             </a>
             <button 
               onClick={handleDownloadExcel}
               disabled={downloading}
-              className="text-sm font-semibold text-[#3182f6] hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              className="text-[13px] sm:text-sm font-semibold text-[#3182f6] hover:bg-blue-50 px-2 sm:px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap flex items-center gap-1"
             >
-              {downloading ? '다운로드 중...' : '엑셀 저장'}
+              <Download size={16} className="sm:hidden" />
+              <span className="hidden sm:inline">{downloading ? '다운로드 중...' : '엑셀 저장'}</span>
             </button>
             <button 
               onClick={() => loadData(page)}
-              className="p-2 text-[#4e5968] hover:bg-black/5 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 text-[#4e5968] hover:bg-black/5 rounded-lg transition-colors shrink-0"
             >
-              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={18} className={`sm:w-5 sm:h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
         {/* Welcome & AI Search Card */}
-        <section className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
+        <section className="bg-white rounded-3xl p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -422,8 +429,8 @@ export default function App() {
           </div>
           
           <div className="relative group">
-            <div className={`absolute inset-y-0 left-4 flex items-center transition-colors ${isAiSearchMode ? 'text-[#3182f6]' : 'text-[#8b95a1]'}`}>
-              {isAiSearchMode ? <BrainCircuit size={20} /> : <Search size={20} />}
+            <div className={`absolute inset-y-0 left-3 sm:left-4 flex items-center transition-colors ${isAiSearchMode ? 'text-[#3182f6]' : 'text-[#8b95a1]'}`}>
+              {isAiSearchMode ? <BrainCircuit size={18} className="sm:w-5 sm:h-5" /> : <Search size={18} className="sm:w-5 sm:h-5" />}
             </div>
             <input 
               type="text" 
@@ -435,16 +442,16 @@ export default function App() {
                 }
               }}
               placeholder={isAiSearchMode ? "예: 저출산 문제를 해결하기 위한 육아 지원 데이터 찾아줘" : "검색어를 입력하세요 (예: 미세먼지)"} 
-              className={`w-full pl-12 pr-24 sm:pr-32 py-4 bg-[#f9fafb] border-2 rounded-2xl text-lg transition-all placeholder:text-[#adb5bd] outline-none ${isAiSearchMode ? 'border-blue-100 focus:border-[#3182f6] focus:bg-white' : 'border-transparent focus:border-gray-200 focus:bg-white'}`}
+              className={`w-full pl-10 sm:pl-12 pr-24 sm:pr-32 py-3 sm:py-4 bg-[#f9fafb] border-2 rounded-2xl text-base sm:text-lg transition-all placeholder:text-[#adb5bd] outline-none ${isAiSearchMode ? 'border-blue-100 focus:border-[#3182f6] focus:bg-white' : 'border-transparent focus:border-gray-200 focus:bg-white'}`}
             />
             <div className="absolute inset-y-0 right-2 flex items-center">
               {isAiSearchMode && (
                 <button 
                   onClick={handleAiSearch}
                   disabled={isAiSearching || !searchQuery.trim()}
-                  className="px-4 py-2.5 bg-[#3182f6] text-white font-bold hover:bg-blue-600 rounded-xl disabled:opacity-30 transition-colors flex items-center gap-2"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#3182f6] text-white font-bold hover:bg-blue-600 rounded-xl disabled:opacity-30 transition-colors flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                 >
-                  {isAiSearching ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} />}
+                  {isAiSearching ? <RefreshCw size={16} className="animate-spin sm:w-[18px] sm:h-[18px]" /> : <Send size={16} className="sm:w-[18px] sm:h-[18px]" />}
                   <span className="hidden sm:inline">AI 검색</span>
                 </button>
               )}
@@ -473,13 +480,13 @@ export default function App() {
         </section>
 
         {/* AI Dataset Recommender Card */}
-        <section className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
+        <section className="bg-white rounded-3xl p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
           <div className="flex items-center gap-2 mb-2">
             <BrainCircuit size={18} className="text-purple-500" />
             <span className="text-sm font-bold text-purple-500">아이디어 추천</span>
           </div>
           <h2 className="text-xl font-bold mb-4">앱 아이디어로 데이터셋 추천받기</h2>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input 
               type="text" 
               value={appIdea}
@@ -532,7 +539,7 @@ export default function App() {
 
         {/* Category & Data Section */}
         <section className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02] overflow-hidden">
-          <div className="p-8 border-b border-black/[0.03]">
+          <div className="p-5 sm:p-8 border-b border-black/[0.03]">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">데이터 목록</h2>
               {(selectedCategory !== 'All' || selectedProvider !== 'All' || searchQuery !== '' || isAiSearchMode) && (
@@ -565,7 +572,21 @@ export default function App() {
                 ))}
               </div>
               
-              <div className="shrink-0">
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <select
+                  value={perPage}
+                  onChange={(e) => {
+                    setPerPage(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="px-4 py-2 rounded-xl text-sm font-bold bg-[#f2f4f6] text-[#4e5968] hover:bg-[#e5e8eb] border-none focus:ring-2 focus:ring-[#3182f6]/20 transition-all outline-none cursor-pointer appearance-none pr-8 relative"
+                  style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234e5968%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right .7rem top 50%', backgroundSize: '.65rem auto' }}
+                >
+                  {perPageOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+
                 <select
                   value={selectedProvider}
                   onChange={(e) => {
@@ -664,27 +685,29 @@ export default function App() {
           </div>
 
           {/* Pagination */}
-          <div className="p-8 bg-[#f9fafb] flex items-center justify-center gap-4">
-            <button 
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1 || loading}
-              className="p-2 text-[#4e5968] hover:bg-[#e5e8eb] rounded-xl disabled:opacity-20 transition-all"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-bold text-[#191f28]">{page}</span>
-              <span className="text-sm text-[#8b95a1]">/</span>
-              <span className="text-sm text-[#8b95a1]">{totalPages}</span>
+          {totalPages > 1 && (
+            <div className="p-5 sm:p-8 bg-[#f9fafb] flex items-center justify-center gap-4">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1 || loading}
+                className="p-2 text-[#4e5968] hover:bg-[#e5e8eb] rounded-xl disabled:opacity-20 transition-all"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-bold text-[#191f28]">{page}</span>
+                <span className="text-sm text-[#8b95a1]">/</span>
+                <span className="text-sm text-[#8b95a1]">{totalPages}</span>
+              </div>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || loading}
+                className="p-2 text-[#4e5968] hover:bg-[#e5e8eb] rounded-xl disabled:opacity-20 transition-all"
+              >
+                <ChevronRight size={24} />
+              </button>
             </div>
-            <button 
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages || loading}
-              className="p-2 text-[#4e5968] hover:bg-[#e5e8eb] rounded-xl disabled:opacity-20 transition-all"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
+          )}
         </section>
 
         {/* Selected Items Floating Bar */}
@@ -694,22 +717,22 @@ export default function App() {
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
-              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4"
+              className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4"
             >
-              <div className="bg-[#191f28] text-white shadow-2xl rounded-3xl p-6 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
+              <div className="bg-[#191f28] text-white shadow-2xl rounded-3xl p-5 sm:p-6 flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h3 className="font-bold text-lg">
                       {selectedDatasets.length}개의 데이터 선택됨
                     </h3>
                     <p className="text-xs text-white/50">데이터를 조합하여 앱 아이디어를 추천받으세요.</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button onClick={() => { setSelectedDatasets([]); setAppRecommendations([]); setUserAdditionalIdea(''); }} className="px-4 py-2 text-sm font-bold text-white/60 hover:text-white">취소</button>
                     <button 
                       onClick={handleRecommendApps} 
                       disabled={isAppRecLoading}
-                      className="px-6 py-2 bg-[#3182f6] text-white rounded-xl font-bold hover:bg-blue-600 transition-all flex items-center gap-2"
+                      className="px-4 sm:px-6 py-2 bg-[#3182f6] text-white rounded-xl font-bold hover:bg-blue-600 transition-all flex items-center gap-2"
                     >
                       {isAppRecLoading ? <RefreshCw className="animate-spin" size={18} /> : <Sparkles size={18} />}
                       {appRecommendations.length > 0 ? '다시 추천받기' : '추천받기'}
@@ -774,7 +797,7 @@ export default function App() {
                     </div>
                     
                     {/* Feedback Input Area */}
-                    <div className="flex gap-2 bg-white/5 p-2 rounded-2xl border border-white/10 mt-2">
+                    <div className="flex flex-col sm:flex-row gap-2 bg-white/5 p-2 rounded-2xl border border-white/10 mt-2">
                       <input 
                         type="text" 
                         value={userAdditionalIdea}
@@ -786,7 +809,7 @@ export default function App() {
                       <button 
                         onClick={handleRecommendApps}
                         disabled={isAppRecLoading || !userAdditionalIdea.trim()}
-                        className="px-4 py-2 bg-[#3182f6] text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center gap-2 shrink-0"
+                        className="px-4 py-2 bg-[#3182f6] text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
                       >
                         <Send size={16} />
                         반영하기
@@ -919,9 +942,9 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }} 
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-2xl bg-white rounded-[24px] shadow-2xl z-[70] overflow-hidden flex flex-col max-h-[85vh]"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-[90%] max-w-2xl bg-white rounded-[24px] shadow-2xl z-[70] overflow-hidden flex flex-col max-h-[85vh]"
             >
-              <div className="flex items-center justify-between p-6 border-b border-black/[0.04]">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-black/[0.04]">
                 <h2 className="text-xl font-bold text-[#191f28]">팝업 관리</h2>
                 <button 
                   onClick={() => setIsPopupManagerOpen(false)}
@@ -931,7 +954,7 @@ export default function App() {
                 </button>
               </div>
               
-              <div className="p-6 flex-1 overflow-y-auto bg-[#f9fafb]">
+              <div className="p-4 sm:p-6 flex-1 overflow-y-auto bg-[#f9fafb]">
                 <div className="flex justify-end mb-4">
                   <button
                     onClick={() => {
@@ -970,11 +993,11 @@ export default function App() {
                                       <GripVertical size={20} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="text-[15px] font-bold text-[#191f28] truncate">{popup.title}</h3>
-                                      <p className="text-[13px] text-[#8b95a1] mt-1 truncate">{popup.id}</p>
+                                      <h3 className="text-[14px] sm:text-[15px] font-bold text-[#191f28] truncate">{popup.title}</h3>
+                                      <p className="text-[12px] sm:text-[13px] text-[#8b95a1] mt-1 truncate">{popup.id}</p>
                                     </div>
-                                    <div className="flex items-center gap-3 shrink-0">
-                                      <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${popup.isActive ? 'bg-[#6366f1] text-white' : 'bg-[#f2f4f6] text-[#8b95a1]'}`}>
+                                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                                      <span className={`px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold rounded-full ${popup.isActive ? 'bg-[#6366f1] text-white' : 'bg-[#f2f4f6] text-[#8b95a1]'}`}>
                                         {popup.isActive ? '활성' : '비활성'}
                                       </span>
                                       <button 
@@ -1028,9 +1051,9 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-xl bg-[#f9fafb] rounded-[24px] shadow-2xl z-[90] overflow-hidden flex flex-col max-h-[90vh]"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-[90%] max-w-xl bg-[#f9fafb] rounded-[24px] shadow-2xl z-[90] overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-6 pb-4">
+              <div className="flex items-center justify-between p-4 sm:p-6 pb-4">
                 <h2 className="text-xl font-bold text-[#191f28]">
                   {editingPopup ? '팝업 수정' : '새 팝업 추가'}
                 </h2>
@@ -1064,7 +1087,7 @@ export default function App() {
                   }
                   setIsPopupEditorOpen(false);
                 }}
-                className="p-6 pt-2 flex-1 overflow-y-auto space-y-5"
+                className="p-4 sm:p-6 pt-2 flex-1 overflow-y-auto space-y-5"
               >
                 <div>
                   <label className="block text-[13px] font-bold text-[#333d4b] mb-2">제목</label>
@@ -1087,7 +1110,7 @@ export default function App() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[13px] font-bold text-[#333d4b] mb-2">버튼 텍스트 (선택 사항)</label>
                     <input 
@@ -1106,7 +1129,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[13px] font-bold text-[#333d4b] mb-2">이미지 파일명 (선택 사항)</label>
                     <input 
@@ -1139,7 +1162,7 @@ export default function App() {
                 <div className="flex justify-end pt-4">
                   <button 
                     type="submit"
-                    className="px-6 py-3 bg-[#6366f1] text-white rounded-xl text-[15px] font-bold hover:bg-indigo-600 transition-colors"
+                    className="w-full sm:w-auto px-6 py-3 bg-[#6366f1] text-white rounded-xl text-[15px] font-bold hover:bg-indigo-600 transition-colors"
                   >
                     저장
                   </button>
@@ -1166,7 +1189,7 @@ export default function App() {
             }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed z-[50] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[480px] bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-black/[0.04] overflow-hidden flex flex-col"
+            className="fixed z-[50] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-[90%] max-w-[480px] bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-black/[0.04] overflow-hidden flex flex-col max-h-[85vh]"
             style={{ 
               zIndex: 100 - index,
               pointerEvents: index === 0 ? 'auto' : 'none',
@@ -1174,7 +1197,7 @@ export default function App() {
             }}
           >
             {popup.imageFilename && (
-              <div className="w-full aspect-video bg-[#f2f4f6] relative">
+              <div className="w-full aspect-video bg-[#f2f4f6] relative shrink-0">
                 <img 
                   src={`/${popup.imageFilename}`} 
                   alt={popup.title} 
@@ -1187,7 +1210,7 @@ export default function App() {
             )}
             
             {popup.youtubeUrl && !popup.imageFilename && (
-              <div className="w-full aspect-video bg-black">
+              <div className="w-full aspect-video bg-black shrink-0">
                 <iframe 
                   width="100%" 
                   height="100%" 
@@ -1200,7 +1223,7 @@ export default function App() {
               </div>
             )}
 
-            <div className="p-6">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1">
               <div className="flex justify-between items-start gap-4 mb-2">
                 <h3 className="text-[17px] font-bold text-[#191f28] leading-snug">{popup.title}</h3>
                 <button 
@@ -1228,7 +1251,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="flex justify-between items-center px-6 py-4 bg-[#f9fafb] border-t border-black/[0.04]">
+            <div className="flex justify-between items-center px-4 sm:px-6 py-4 bg-[#f9fafb] border-t border-black/[0.04]">
               <button 
                 onClick={() => {
                   const tomorrow = new Date();
